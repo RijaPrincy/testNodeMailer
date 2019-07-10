@@ -1,6 +1,8 @@
 const Profile = require('../Model/model');
 var nodemailer = require('nodemailer');
 //const mail = require('./mail');
+const zoho = require('@trifoia/zcrmsdk');
+const config = require('./zoho.config');
 
 module.exports.getDonne = (req, res) => {
     Profile.find()
@@ -35,7 +37,7 @@ module.exports.postDonne = function (req, res) {
                 .then((note) => {
                     console.log("succs");
 
-                    var smtpTransport = nodemailer.createTransport( {
+                    var smtpTransport = nodemailer.createTransport({
                         service: "Gmail",
                         auth: {
                             user: "rija0princy@gmail.com",
@@ -46,19 +48,19 @@ module.exports.postDonne = function (req, res) {
                         from: "rija0princy@gmail.com",
                         to: "rjpratsimb@gmail.com",
                         subject: ' | new message !',
-                        text: "hahah"
+                        text: "hello man"
                     }
-                   
-                    
+
+
                     smtpTransport.sendMail(mailOptions, function (error, response) {
                         if (error) {
                             console.log(error);
                         } else {
                             console.log("ok");
-
+                            res.send(note);
                         }
                     });
-                    // res.send(note);
+
 
                 })
                 .catch(e => {
@@ -67,3 +69,46 @@ module.exports.postDonne = function (req, res) {
         })
 
 }
+
+module.exports.getZoho = (req, res, next) => {
+    zoho.initialize(config).then((client) => {
+        client.API.MODULES.get({
+            module: 'Contacts',
+            Email: "krismarrier@gmail.com",
+            // id:"4082318000000224013",
+            params: {
+                page: 1,
+                per_page: 200,
+
+            },
+        }).then((response) => {
+            res.json(JSON.parse(response.body));
+        }).catch(next);
+    }).catch(next);
+};
+
+
+
+module.exports.postZoho = (req, res, next) => {
+    zoho.initialize(config).then((client) => {
+        client.API.MODULES.post({
+            module: 'Contacts',
+            body: {
+                // Pay ATTENTION! Data is an array!
+                data: [
+                    {
+                        First_Name: "rado",
+                        Last_Name: "kham",
+                        Email: "rado@gmail.com",
+                        Mobile: "032 14 258 79",
+                    }
+                ],
+            },
+        }).then((data) => {
+            const { datar } = JSON.parse(data.body);
+
+            res.json({ datar });
+        });
+    });
+}
+
